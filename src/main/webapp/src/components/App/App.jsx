@@ -1,8 +1,17 @@
 import React from 'react';
 
+import Header from "../Header";
+import ZoneResource from "../ZoneResource";
+
+
 function App() {
   return (
-    <div>OK</div>
+    <>
+      <Header/>
+      <div className="container">
+        <ZoneResource/>
+      </div>
+    </>
   );
 }
 
