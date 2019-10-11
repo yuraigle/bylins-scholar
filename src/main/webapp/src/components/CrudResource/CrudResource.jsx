@@ -77,7 +77,6 @@ class CrudResource extends React.Component {
         </thead>
         <tbody>
         {
-
           entities.map(row => (
             <tr key={row['_links'].self.href}>
               {
