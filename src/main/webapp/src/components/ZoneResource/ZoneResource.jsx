@@ -7,6 +7,6 @@ const ZoneList = {
   repop: 'Репоп',
 };
 
-const ZoneResource = () => <CrudResource list={ZoneList}/>;
+const ZoneResource = () => <CrudResource resName="zones" list={ZoneList}/>;
 
 export default ZoneResource;
