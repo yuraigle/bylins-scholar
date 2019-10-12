@@ -2,7 +2,9 @@ import React from 'react';
 import {withRouter} from 'react-router-dom';
 import ReactPaginate from 'react-paginate';
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+
 import TableHeader from "./TableHeader";
+import PagingSizePicker from "./PagingSizePicker";
 
 const axios = require('axios');
 const queryString = require('query-string');
@@ -55,7 +57,7 @@ class CrudResource extends React.Component {
 
     return {
       page: (qq.page) ? qq.page : 1,
-      size: (qq.size) ? qq.size : 10,
+      size: (qq.size) ? qq.size : 25,
       sort: (qq.sort) ? qq.sort : 'id',
       ord: (qq.ord) ? qq.ord : 'asc',
     };
@@ -87,24 +89,14 @@ class CrudResource extends React.Component {
     const {page, size, sort, ord} = this.pagingFromQuery();
     const iLo = ((page - 1) * size) + 1;
     const iHi = iLo + entities.length - 1;
-    // TODO: поиск еще надо реализовать
 
     return <>
       <div className="row mb-2">
+        <div className="col-md-6">
+          <PagingSizePicker size={size} onChange={e => this.handlePagingSizeChange(e)}/>
+        </div>
         <form className="col-md-6 form-inline">
-          <label>
-            Показывать
-            <select className="form-control form-control-sm ml-1 mr-1"
-                    onChange={e => this.handlePagingSizeChange(e.target.value)}>
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
-            записей
-          </label>
-        </form>
-        <form className="col-md-6 form-inline">
+          {/* TODO: поиск еще надо реализовать */}
           <label className="form-label ml-auto">
             Поиск:
             <input type="search" className="form-control form-control-sm ml-2"/>
@@ -121,7 +113,7 @@ class CrudResource extends React.Component {
                            onClick={() => this.handlePagingSortChange(k)}/>
             )
           }
-          <th/>
+          <th style={{width: '90px'}}/>
         </tr>
         </thead>
         <tbody>
@@ -158,7 +150,7 @@ class CrudResource extends React.Component {
           <ReactPaginate
             pageCount={totalPages}
             onPageChange={p => this.handlePagingPageChange(p.selected)}
-            hrefBuilder={() => ''}
+            hrefBuilder={p => `?page=${p}&size=${size}&sort=${sort}&ord=${ord}`}
             forcePage={page - 1}
             containerClassName="pagination pagination-sm justify-content-end"
             previousLabel={"←"}
