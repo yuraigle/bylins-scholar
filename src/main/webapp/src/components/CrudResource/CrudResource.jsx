@@ -15,6 +15,8 @@ class CrudResource extends React.Component {
     entities: [],
     totalPages: undefined,
     totalElements: undefined,
+    modal: undefined,
+    editedEntity: undefined,
   };
 
   componentDidMount() {
@@ -37,7 +39,7 @@ class CrudResource extends React.Component {
 
     this.setState({entities: []});
     axios.get(url)
-      .then((resp) => {
+      .then(resp => {
         const {data} = resp;
         this.setState({
           entities: data['_embedded'][resName],
@@ -45,10 +47,25 @@ class CrudResource extends React.Component {
           totalPages: data['page']['totalPages'],
         });
       })
-      .catch((err) => {
+      .catch(err => {
         alert('Ошибка доступа к API');
         console.error(err);
       });
+  }
+
+  deleteEntity(row) {
+    const url = row['_links']['self']['href'];
+
+    axios.delete(url)
+      .then(() => {
+        this.loadEntities();
+      })
+      .catch(err => {
+        alert('Ошибка доступа к API');
+        console.error(err);
+      });
+
+    this.setState({modal: undefined, editedEntity: undefined});
   }
 
   pagingFromQuery() {
@@ -84,8 +101,8 @@ class CrudResource extends React.Component {
   }
 
   render() {
-    const {list, resName} = this.props;
-    const {entities, totalPages, totalElements} = this.state;
+    const {names, DeleteDialog} = this.props;
+    const {entities, totalPages, totalElements, modal, editedEntity} = this.state;
     const {page, size, sort, ord} = this.pagingFromQuery();
     const iLo = ((page - 1) * size) + 1;
     const iHi = iLo + entities.length - 1;
@@ -108,8 +125,8 @@ class CrudResource extends React.Component {
         <thead className="thead-light">
         <tr>
           {
-            Object.keys(list).map(k =>
-              <TableHeader key={k} k={k} name={list[k]} sort={sort} ord={ord}
+            Object.keys(names).map(k =>
+              <TableHeader key={k} k={k} name={names[k]} sort={sort} ord={ord}
                            onClick={() => this.handlePagingSortChange(k)}/>
             )
           }
@@ -121,7 +138,7 @@ class CrudResource extends React.Component {
           entities.map(row => (
             <tr key={row['_links'].self.href}>
               {
-                Object.keys(list).map(k =>
+                Object.keys(names).map(k =>
                   <td key={k}>
                     {row[k]}
                   </td>
@@ -133,7 +150,11 @@ class CrudResource extends React.Component {
                   <button type="button" className="btn btn-outline-secondary">
                     <FontAwesomeIcon icon="edit" fixedWidth={true}/>
                   </button>
-                  <button type="button" className="btn btn-outline-danger">
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger"
+                    onClick={() => this.setState({modal: 'delete', editedEntity: row})}
+                  >
                     <FontAwesomeIcon icon="trash-alt" fixedWidth={true}/>
                   </button>
                 </div>
@@ -157,6 +178,13 @@ class CrudResource extends React.Component {
           />
         </div>
       </div>
+
+      <DeleteDialog
+        isShown={modal === 'delete'}
+        onConfirm={row => this.deleteEntity(row)}
+        toggle={() => this.setState({modal: undefined, editedEntity: undefined})}
+        entity={editedEntity}
+      />
     </>;
   }
 }

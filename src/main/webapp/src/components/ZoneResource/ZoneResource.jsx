@@ -1,8 +1,9 @@
 import React from 'react';
 import CrudResource from "../CrudResource";
+import ZoneDelete from "./ZoneDelete";
 
-const ZoneList = {
-  n: 'ID',
+const names = {
+  n: '№',
   name: 'Название',
   repop: 'Репоп',
 };
@@ -11,7 +12,8 @@ const ZoneResource = () =>
   <CrudResource
     apiBase="http://localhost:8080/api"
     resName="zones"
-    list={ZoneList}
+    names={names}
+    DeleteDialog={ZoneDelete}
   />;
 
 export default ZoneResource;
