@@ -7,6 +7,11 @@ const ZoneList = {
   repop: 'Репоп',
 };
 
-const ZoneResource = () => <CrudResource resName="zones" list={ZoneList}/>;
+const ZoneResource = () =>
+  <CrudResource
+    apiBase="http://localhost:8080/api"
+    resName="zones"
+    list={ZoneList}
+  />;
 
 export default ZoneResource;

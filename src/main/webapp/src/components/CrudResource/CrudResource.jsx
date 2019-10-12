@@ -1,10 +1,10 @@
 import React from 'react';
 import {withRouter} from 'react-router-dom';
-import ReactPaginate from 'react-paginate';
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 import TableHeader from "./TableHeader";
 import PagingSizePicker from "./PagingSizePicker";
+import ListPaginate from "./ListPaginate";
 
 const axios = require('axios');
 const queryString = require('query-string');
@@ -28,8 +28,7 @@ class CrudResource extends React.Component {
   }
 
   loadEntities() {
-    const apiBase = 'http://localhost:8080/api';
-    const {resName} = this.props;
+    const {apiBase, resName} = this.props;
     const paging = this.pagingFromQuery();
     paging.page -= 1;
     paging.sort += ',' + paging.ord;
@@ -47,6 +46,7 @@ class CrudResource extends React.Component {
         });
       })
       .catch((err) => {
+        alert('Ошибка доступа к API');
         console.error(err);
       });
   }
@@ -113,7 +113,7 @@ class CrudResource extends React.Component {
                            onClick={() => this.handlePagingSortChange(k)}/>
             )
           }
-          <th style={{width: '90px'}}/>
+          <th style={{width: '100px'}}/>
         </tr>
         </thead>
         <tbody>
@@ -128,13 +128,15 @@ class CrudResource extends React.Component {
                 )
               }
 
-              <td className="text-right">
-                <a className="btn btn-sm btn-primary mr-1" href={`/${resName}/edit/${row.n}`}>
-                  <FontAwesomeIcon icon="edit"/>
-                </a>
-                <button className="btn btn-sm btn-danger">
-                  <FontAwesomeIcon icon="trash-alt"/>
-                </button>
+              <td className="text-center">
+                <div className="btn-group btn-group-sm">
+                  <button type="button" className="btn btn-outline-secondary">
+                    <FontAwesomeIcon icon="edit" fixedWidth={true}/>
+                  </button>
+                  <button type="button" className="btn btn-outline-danger">
+                    <FontAwesomeIcon icon="trash-alt" fixedWidth={true}/>
+                  </button>
+                </div>
               </td>
             </tr>
           ))
@@ -147,24 +149,11 @@ class CrudResource extends React.Component {
           Показано {iLo}-{iHi} из {totalElements}
         </div>
         <div className="col-md-7">
-          <ReactPaginate
+          <ListPaginate
             pageCount={totalPages}
             onPageChange={p => this.handlePagingPageChange(p.selected)}
             hrefBuilder={p => `?page=${p}&size=${size}&sort=${sort}&ord=${ord}`}
             forcePage={page - 1}
-            containerClassName="pagination pagination-sm justify-content-end"
-            previousLabel={"←"}
-            nextLabel={"→"}
-            breakClassName="page-item disabled"
-            breakLinkClassName="page-link"
-            pageClassName="page-item"
-            previousClassName="page-item"
-            nextClassName="page-item"
-            pageLinkClassName="page-link"
-            previousLinkClassName="page-link"
-            nextLinkClassName="page-link"
-            disabledClassName="disabled"
-            activeClassName="active"
           />
         </div>
       </div>
