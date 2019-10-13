@@ -1,5 +1,6 @@
 import React from 'react';
 import CrudResource from "../CrudResource";
+import ZoneCreate from "./ZoneCreate";
 import ZoneDelete from "./ZoneDelete";
 
 const names = {
@@ -13,6 +14,7 @@ const ZoneResource = () =>
     apiBase="http://localhost:8080/api"
     resName="zones"
     names={names}
+    CreateDialog={ZoneCreate}
     DeleteDialog={ZoneDelete}
   />;
 

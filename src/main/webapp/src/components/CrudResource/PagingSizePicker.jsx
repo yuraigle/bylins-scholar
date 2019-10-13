@@ -1,9 +1,10 @@
 import React from 'react';
 
-export default function PagingSizePicker({size, onChange}) {
-  return <form className="form-inline">
+export default function PagingSizePicker({lo, hi, total, size, onChange}) {
+  return <form className="form-inline" style={{marginBottom: '1rem'}}>
+    <span className="mr-1">Показано {lo}-{hi} из {total} записей.</span>
     <label>
-      Показывать
+      По
       <select className="form-control form-control-sm ml-1 mr-1"
               value={size}
               onChange={e => onChange(e.target.value)}>
@@ -12,7 +13,7 @@ export default function PagingSizePicker({size, onChange}) {
         <option value="50">50</option>
         <option value="100">100</option>
       </select>
-      записей
+      на страницу.
     </label>
   </form>
 }

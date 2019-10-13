@@ -53,6 +53,23 @@ class CrudResource extends React.Component {
       });
   }
 
+  createEntity(row) {
+    console.log(row);
+    const {apiBase, resName} = this.props;
+    const url = `${apiBase}/${resName}`;
+
+    axios.post(url, row)
+      .then(resp => {
+        console.log(resp);
+      })
+      .catch(err => {
+        alert('Ошибка доступа к API');
+        console.error(err);
+      });
+
+    this.setState({modal: undefined, editedEntity: undefined});
+  }
+
   deleteEntity(row) {
     const url = row['_links']['self']['href'];
 
@@ -101,7 +118,7 @@ class CrudResource extends React.Component {
   }
 
   render() {
-    const {names, DeleteDialog} = this.props;
+    const {names, CreateDialog, DeleteDialog} = this.props;
     const {entities, totalPages, totalElements, modal, editedEntity} = this.state;
     const {page, size, sort, ord} = this.pagingFromQuery();
     const iLo = ((page - 1) * size) + 1;
@@ -110,7 +127,13 @@ class CrudResource extends React.Component {
     return <>
       <div className="row mb-2">
         <div className="col-md-6">
-          <PagingSizePicker size={size} onChange={e => this.handlePagingSizeChange(e)}/>
+          <button type="button" className="btn btn-sm btn-primary"
+                  onClick={() => this.setState({modal: 'create'})}
+          >
+            <FontAwesomeIcon icon="plus" fixedWidth={true}/>
+            {' '}
+            Добавить
+          </button>
         </div>
         <form className="col-md-6 form-inline">
           {/* TODO: поиск еще надо реализовать */}
@@ -166,10 +189,11 @@ class CrudResource extends React.Component {
       </table>
 
       <div className="row">
-        <div className="col-md-5 text-muted">
-          Показано {iLo}-{iHi} из {totalElements}
+        <div className="col-md-6 d-flex text-muted">
+          <PagingSizePicker lo={iLo} hi={iHi} total={totalElements}
+                            size={size} onChange={e => this.handlePagingSizeChange(e)}/>
         </div>
-        <div className="col-md-7">
+        <div className="col-md-6">
           <ListPaginate
             pageCount={totalPages}
             onPageChange={p => this.handlePagingPageChange(p.selected)}
@@ -179,6 +203,11 @@ class CrudResource extends React.Component {
         </div>
       </div>
 
+      <CreateDialog
+        isShown={modal === 'create'}
+        onSubmit={row => this.createEntity(row)}
+        toggle={() => this.setState({modal: undefined, editedEntity: undefined})}
+      />
       <DeleteDialog
         isShown={modal === 'delete'}
         onConfirm={row => this.deleteEntity(row)}
