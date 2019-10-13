@@ -1,5 +1,6 @@
 import React from 'react';
 import {withRouter} from 'react-router-dom';
+import {toast} from "react-toastify";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 import TableHeader from "./TableHeader";
@@ -29,6 +30,12 @@ class CrudResource extends React.Component {
     }
   }
 
+  handleError = err => {
+    toast.error(err.toString());
+    console.error(err);
+  };
+
+
   loadEntities() {
     const {apiBase, resName} = this.props;
     const paging = this.pagingFromQuery();
@@ -47,10 +54,7 @@ class CrudResource extends React.Component {
           totalPages: data['page']['totalPages'],
         });
       })
-      .catch(err => {
-        alert('Ошибка доступа к API');
-        console.error(err);
-      });
+      .catch(err => this.handleError(err));
   }
 
   createEntity(row) {
@@ -61,11 +65,9 @@ class CrudResource extends React.Component {
     axios.post(url, row)
       .then(resp => {
         console.log(resp);
+        toast.info("Запись добавлена");
       })
-      .catch(err => {
-        alert('Ошибка доступа к API');
-        console.error(err);
-      });
+      .catch(err => this.handleError(err));
 
     this.setState({modal: undefined, editedEntity: undefined});
   }
@@ -75,12 +77,10 @@ class CrudResource extends React.Component {
 
     axios.delete(url)
       .then(() => {
+        toast.info("Запись удалена");
         this.loadEntities();
       })
-      .catch(err => {
-        alert('Ошибка доступа к API');
-        console.error(err);
-      });
+      .catch(err => this.handleError(err));
 
     this.setState({modal: undefined, editedEntity: undefined});
   }
@@ -91,7 +91,7 @@ class CrudResource extends React.Component {
 
     return {
       page: (qq.page) ? qq.page : 1,
-      size: (qq.size) ? qq.size : 25,
+      size: (qq.size) ? qq.size : 15,
       sort: (qq.sort) ? qq.sort : 'id',
       ord: (qq.ord) ? qq.ord : 'asc',
     };
