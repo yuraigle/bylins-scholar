@@ -18,14 +18,17 @@ const ZoneSchema = Yup.object().shape({
     .max(120, 'Не больше 120 минут')
 });
 
+const initValues = (schema, row) => Object
+  .keys(schema.fields)
+  .reduce((obj, k) => {
+    obj[k] = (row && row[k] !== null) ? row[k] : undefined;
+    return obj;
+  }, {});
+
 export default React.forwardRef(({row, onSubmit}, ref) => (
     <Formik
       ref={ref}
-      initialValues={{
-        n: (row) ? row.n : '',
-        name: (row) ? row.name : '',
-        repop: (row) ? row.repop : '',
-      }}
+      initialValues={initValues(ZoneSchema, row)}
       validationSchema={ZoneSchema}
       onSubmit={onSubmit}
     >

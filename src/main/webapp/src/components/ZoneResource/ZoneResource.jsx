@@ -1,6 +1,7 @@
 import React from 'react';
 import CrudResource from "../CrudResource";
 import ZoneCreate from "./ZoneCreate";
+import ZoneUpdate from "./ZoneUpdate";
 import ZoneDelete from "./ZoneDelete";
 
 const names = {
@@ -15,6 +16,7 @@ const ZoneResource = () =>
     resName="zones"
     names={names}
     CreateDialog={ZoneCreate}
+    UpdateDialog={ZoneUpdate}
     DeleteDialog={ZoneDelete}
   />;
 

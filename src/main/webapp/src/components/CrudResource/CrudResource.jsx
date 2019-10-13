@@ -58,22 +58,36 @@ class CrudResource extends React.Component {
   }
 
   createEntity(row) {
-    console.log(row);
     const {apiBase, resName} = this.props;
     const url = `${apiBase}/${resName}`;
 
     axios.post(url, row)
-      .then(resp => {
-        console.log(resp);
+      .then(() => {
         toast.info("Запись добавлена");
+        this.loadEntities();
       })
       .catch(err => this.handleError(err));
 
     this.setState({modal: undefined, editedEntity: undefined});
   }
 
-  deleteEntity(row) {
-    const url = row['_links']['self']['href'];
+  updateEntity(row) {
+    const {editedEntity} = this.state;
+    const url = editedEntity['_links']['self']['href'];
+
+    axios.put(url, row)
+      .then(() => {
+        toast.info("Запись сохранена");
+        this.loadEntities();
+      })
+      .catch(err => this.handleError(err));
+
+    this.setState({modal: undefined, editedEntity: undefined});
+  }
+
+  deleteEntity() {
+    const {editedEntity} = this.state;
+    const url = editedEntity['_links']['self']['href'];
 
     axios.delete(url)
       .then(() => {
@@ -118,7 +132,7 @@ class CrudResource extends React.Component {
   }
 
   render() {
-    const {names, CreateDialog, DeleteDialog} = this.props;
+    const {names, CreateDialog, UpdateDialog, DeleteDialog} = this.props;
     const {entities, totalPages, totalElements, modal, editedEntity} = this.state;
     const {page, size, sort, ord} = this.pagingFromQuery();
     const iLo = ((page - 1) * size) + 1;
@@ -170,7 +184,11 @@ class CrudResource extends React.Component {
 
               <td className="text-center">
                 <div className="btn-group btn-group-sm">
-                  <button type="button" className="btn btn-outline-secondary">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => this.setState({modal: 'update', editedEntity: row})}
+                  >
                     <FontAwesomeIcon icon="edit" fixedWidth={true}/>
                   </button>
                   <button
@@ -208,11 +226,17 @@ class CrudResource extends React.Component {
         onSubmit={row => this.createEntity(row)}
         toggle={() => this.setState({modal: undefined, editedEntity: undefined})}
       />
+      <UpdateDialog
+        isShown={modal === 'update'}
+        onSubmit={row => this.updateEntity(row)}
+        toggle={() => this.setState({modal: undefined, editedEntity: undefined})}
+        row={editedEntity}
+      />
       <DeleteDialog
         isShown={modal === 'delete'}
-        onConfirm={row => this.deleteEntity(row)}
+        onConfirm={() => this.deleteEntity()}
         toggle={() => this.setState({modal: undefined, editedEntity: undefined})}
-        entity={editedEntity}
+        row={editedEntity}
       />
     </>;
   }
