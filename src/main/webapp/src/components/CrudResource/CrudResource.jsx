@@ -1,5 +1,6 @@
 import React from 'react';
 import {withRouter} from 'react-router-dom';
+import {toast} from "react-toastify";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 import TableHeader from "./TableHeader";
@@ -15,6 +16,8 @@ class CrudResource extends React.Component {
     entities: [],
     totalPages: undefined,
     totalElements: undefined,
+    modal: undefined,
+    editedEntity: undefined,
   };
 
   componentDidMount() {
@@ -27,6 +30,12 @@ class CrudResource extends React.Component {
     }
   }
 
+  handleError = err => {
+    toast.error(err.toString());
+    console.error(err);
+  };
+
+
   loadEntities() {
     const {apiBase, resName} = this.props;
     const paging = this.pagingFromQuery();
@@ -37,7 +46,7 @@ class CrudResource extends React.Component {
 
     this.setState({entities: []});
     axios.get(url)
-      .then((resp) => {
+      .then(resp => {
         const {data} = resp;
         this.setState({
           entities: data['_embedded'][resName],
@@ -45,10 +54,49 @@ class CrudResource extends React.Component {
           totalPages: data['page']['totalPages'],
         });
       })
-      .catch((err) => {
-        alert('Ошибка доступа к API');
-        console.error(err);
-      });
+      .catch(err => this.handleError(err));
+  }
+
+  createEntity(row) {
+    const {apiBase, resName} = this.props;
+    const url = `${apiBase}/${resName}`;
+
+    axios.post(url, row)
+      .then(() => {
+        toast.info("Запись добавлена");
+        this.loadEntities();
+      })
+      .catch(err => this.handleError(err));
+
+    this.setState({modal: undefined, editedEntity: undefined});
+  }
+
+  updateEntity(row) {
+    const {editedEntity} = this.state;
+    const url = editedEntity['_links']['self']['href'];
+
+    axios.put(url, row)
+      .then(() => {
+        toast.info("Запись сохранена");
+        this.loadEntities();
+      })
+      .catch(err => this.handleError(err));
+
+    this.setState({modal: undefined, editedEntity: undefined});
+  }
+
+  deleteEntity() {
+    const {editedEntity} = this.state;
+    const url = editedEntity['_links']['self']['href'];
+
+    axios.delete(url)
+      .then(() => {
+        toast.info("Запись удалена");
+        this.loadEntities();
+      })
+      .catch(err => this.handleError(err));
+
+    this.setState({modal: undefined, editedEntity: undefined});
   }
 
   pagingFromQuery() {
@@ -57,7 +105,7 @@ class CrudResource extends React.Component {
 
     return {
       page: (qq.page) ? qq.page : 1,
-      size: (qq.size) ? qq.size : 25,
+      size: (qq.size) ? qq.size : 15,
       sort: (qq.sort) ? qq.sort : 'id',
       ord: (qq.ord) ? qq.ord : 'asc',
     };
@@ -84,8 +132,8 @@ class CrudResource extends React.Component {
   }
 
   render() {
-    const {list, resName} = this.props;
-    const {entities, totalPages, totalElements} = this.state;
+    const {names, CreateDialog, UpdateDialog, DeleteDialog} = this.props;
+    const {entities, totalPages, totalElements, modal, editedEntity} = this.state;
     const {page, size, sort, ord} = this.pagingFromQuery();
     const iLo = ((page - 1) * size) + 1;
     const iHi = iLo + entities.length - 1;
@@ -93,7 +141,13 @@ class CrudResource extends React.Component {
     return <>
       <div className="row mb-2">
         <div className="col-md-6">
-          <PagingSizePicker size={size} onChange={e => this.handlePagingSizeChange(e)}/>
+          <button type="button" className="btn btn-sm btn-primary"
+                  onClick={() => this.setState({modal: 'create'})}
+          >
+            <FontAwesomeIcon icon="plus" fixedWidth={true}/>
+            {' '}
+            Добавить
+          </button>
         </div>
         <form className="col-md-6 form-inline">
           {/* TODO: поиск еще надо реализовать */}
@@ -108,8 +162,8 @@ class CrudResource extends React.Component {
         <thead className="thead-light">
         <tr>
           {
-            Object.keys(list).map(k =>
-              <TableHeader key={k} k={k} name={list[k]} sort={sort} ord={ord}
+            Object.keys(names).map(k =>
+              <TableHeader key={k} k={k} name={names[k]} sort={sort} ord={ord}
                            onClick={() => this.handlePagingSortChange(k)}/>
             )
           }
@@ -121,7 +175,7 @@ class CrudResource extends React.Component {
           entities.map(row => (
             <tr key={row['_links'].self.href}>
               {
-                Object.keys(list).map(k =>
+                Object.keys(names).map(k =>
                   <td key={k}>
                     {row[k]}
                   </td>
@@ -130,10 +184,18 @@ class CrudResource extends React.Component {
 
               <td className="text-center">
                 <div className="btn-group btn-group-sm">
-                  <button type="button" className="btn btn-outline-secondary">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => this.setState({modal: 'update', editedEntity: row})}
+                  >
                     <FontAwesomeIcon icon="edit" fixedWidth={true}/>
                   </button>
-                  <button type="button" className="btn btn-outline-danger">
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger"
+                    onClick={() => this.setState({modal: 'delete', editedEntity: row})}
+                  >
                     <FontAwesomeIcon icon="trash-alt" fixedWidth={true}/>
                   </button>
                 </div>
@@ -145,10 +207,11 @@ class CrudResource extends React.Component {
       </table>
 
       <div className="row">
-        <div className="col-md-5 text-muted">
-          Показано {iLo}-{iHi} из {totalElements}
+        <div className="col-md-6 d-flex text-muted">
+          <PagingSizePicker lo={iLo} hi={iHi} total={totalElements}
+                            size={size} onChange={e => this.handlePagingSizeChange(e)}/>
         </div>
-        <div className="col-md-7">
+        <div className="col-md-6">
           <ListPaginate
             pageCount={totalPages}
             onPageChange={p => this.handlePagingPageChange(p.selected)}
@@ -157,6 +220,24 @@ class CrudResource extends React.Component {
           />
         </div>
       </div>
+
+      <CreateDialog
+        isShown={modal === 'create'}
+        onSubmit={row => this.createEntity(row)}
+        toggle={() => this.setState({modal: undefined, editedEntity: undefined})}
+      />
+      <UpdateDialog
+        isShown={modal === 'update'}
+        onSubmit={row => this.updateEntity(row)}
+        toggle={() => this.setState({modal: undefined, editedEntity: undefined})}
+        row={editedEntity}
+      />
+      <DeleteDialog
+        isShown={modal === 'delete'}
+        onConfirm={() => this.deleteEntity()}
+        toggle={() => this.setState({modal: undefined, editedEntity: undefined})}
+        row={editedEntity}
+      />
     </>;
   }
 }
